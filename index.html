@@ -1,0 +1,419 @@
+import * as React from 'react';
+
+// --- Shared Utils (also used by tests) ---
+function normalizeRomaji(s) {
+  return (s ?? '').trim().toLowerCase().replace(/\s+/g, '');
+}
+function isRomajiCorrect(input, item) {
+  if (!item) return false;
+  const n = normalizeRomaji(input);
+  return item.romaji.some((r) => normalizeRomaji(r) === n);
+}
+
+export default function HiraganaTrainerApp() {
+  // --- Data ---
+  const KANA = [
+    // a-row
+    { kana: 'あ', romaji: ['a'], row: 'a' },
+    { kana: 'い', romaji: ['i'], row: 'a' },
+    { kana: 'う', romaji: ['u'], row: 'a' },
+    { kana: 'え', romaji: ['e'], row: 'a' },
+    { kana: 'お', romaji: ['o'], row: 'a' },
+    // ka-row
+    { kana: 'か', romaji: ['ka'], row: 'ka' },
+    { kana: 'き', romaji: ['ki'], row: 'ka' },
+    { kana: 'く', romaji: ['ku'], row: 'ka' },
+    { kana: 'け', romaji: ['ke'], row: 'ka' },
+    { kana: 'こ', romaji: ['ko'], row: 'ka' },
+    // sa-row
+    { kana: 'さ', romaji: ['sa'], row: 'sa' },
+    { kana: 'し', romaji: ['shi', 'si'], row: 'sa' },
+    { kana: 'す', romaji: ['su'], row: 'sa' },
+    { kana: 'せ', romaji: ['se'], row: 'sa' },
+    { kana: 'そ', romaji: ['so'], row: 'sa' },
+    // ta-row
+    { kana: 'た', romaji: ['ta'], row: 'ta' },
+    { kana: 'ち', romaji: ['chi', 'ti'], row: 'ta' },
+    { kana: 'つ', romaji: ['tsu', 'tu'], row: 'ta' },
+    { kana: 'て', romaji: ['te'], row: 'ta' },
+    { kana: 'と', romaji: ['to'], row: 'ta' },
+    // na-row
+    { kana: 'な', romaji: ['na'], row: 'na' },
+    { kana: 'に', romaji: ['ni'], row: 'na' },
+    { kana: 'ぬ', romaji: ['nu'], row: 'na' },
+    { kana: 'ね', romaji: ['ne'], row: 'na' },
+    { kana: 'の', romaji: ['no'], row: 'na' },
+    // ha-row
+    { kana: 'は', romaji: ['ha'], row: 'ha' },
+    { kana: 'ひ', romaji: ['hi'], row: 'ha' },
+    { kana: 'ふ', romaji: ['fu', 'hu'], row: 'ha' },
+    { kana: 'へ', romaji: ['he'], row: 'ha' },
+    { kana: 'ほ', romaji: ['ho'], row: 'ha' },
+    // ma-row
+    { kana: 'ま', romaji: ['ma'], row: 'ma' },
+    { kana: 'み', romaji: ['mi'], row: 'ma' },
+    { kana: 'む', romaji: ['mu'], row: 'ma' },
+    { kana: 'め', romaji: ['me'], row: 'ma' },
+    { kana: 'も', romaji: ['mo'], row: 'ma' },
+    // ya-row (no i/e)
+    { kana: 'や', romaji: ['ya'], row: 'ya' },
+    { kana: 'ゆ', romaji: ['yu'], row: 'ya' },
+    { kana: 'よ', romaji: ['yo'], row: 'ya' },
+    // ra-row
+    { kana: 'ら', romaji: ['ra'], row: 'ra' },
+    { kana: 'り', romaji: ['ri'], row: 'ra' },
+    { kana: 'る', romaji: ['ru'], row: 'ra' },
+    { kana: 'れ', romaji: ['re'], row: 'ra' },
+    { kana: 'ろ', romaji: ['ro'], row: 'ra' },
+    // wa-row + n
+    { kana: 'わ', romaji: ['wa'], row: 'wa' },
+    { kana: 'を', romaji: ['wo', 'o'], row: 'wa' },
+    { kana: 'ん', romaji: ['n', 'nn', "n'"], row: 'n' },
+  ];
+
+  const ROWS = [
+    { key: 'a', label: 'あ(あ-お)' },
+    { key: 'ka', label: 'か(か-こ)' },
+    { key: 'sa', label: 'さ(さ-そ)' },
+    { key: 'ta', label: 'た(た-と)' },
+    { key: 'na', label: 'な(な-の)' },
+    { key: 'ha', label: 'は(は-ほ)' },
+    { key: 'ma', label: 'ま(ま-も)' },
+    { key: 'ya', label: 'や(ย-よ)' },
+    { key: 'ra', label: 'ら(ら-ろ)' },
+    { key: 'wa', label: 'わ/を' },
+    { key: 'n', label: 'ん' },
+  ];
+
+  // --- Utils ---
+  const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+  const shuffle = (arr) => [...arr].sort(() => Math.random() - 0.5);
+
+  // --- State ---
+  const [mode, setMode] = React.useState('multiple'); // multiple | typing | cards
+  const [enabledRows, setEnabledRows] = React.useState(new Set(ROWS.map((r) => r.key)));
+  const [pool, setPool] = React.useState(KANA);
+  const [question, setQuestion] = React.useState(null);
+  const [choices, setChoices] = React.useState([]);
+  const [answer, setAnswer] = React.useState('');
+  const [reveal, setReveal] = React.useState(false);
+  const [score, setScore] = React.useState(0);
+  const [total, setTotal] = React.useState(0);
+  const [streak, setStreak] = React.useState(0);
+  const [history, setHistory] = React.useState([]);
+
+  React.useEffect(() => {
+    const newPool = KANA.filter((k) => enabledRows.has(k.row));
+    setPool(newPool);
+  }, [enabledRows]);
+
+  React.useEffect(() => {
+    if (pool.length) nextQuestion();
+  }, [pool, mode]);
+
+  function toggleRow(key) {
+    const updated = new Set(enabledRows);
+    if (updated.has(key)) updated.delete(key); else updated.add(key);
+    if (updated.size === 0) return;
+    setEnabledRows(updated);
+  }
+
+  function buildQuestion(base) {
+    if (mode === 'multiple') {
+      const correct = base;
+      const wrongs = shuffle(pool.filter((k) => k.kana !== correct.kana)).slice(0, 3);
+      const opts = shuffle([correct, ...wrongs]);
+      setChoices(opts);
+    }
+    setQuestion(base);
+    setReveal(false);
+    setAnswer('');
+  }
+
+  function nextQuestion() {
+    buildQuestion(pick(pool));
+  }
+
+  function submitTyping() {
+    if (!question) return;
+    const ok = isRomajiCorrect(answer, question);
+    setTotal((t) => t + 1);
+    setScore((s) => s + (ok ? 1 : 0));
+    setStreak((st) => (ok ? st + 1 : 0));
+    setHistory((h) => [
+      { q: question.kana, a: answer || '(ว่าง)', correct: question.romaji[0], ok },
+      ...h.slice(0, 19),
+    ]);
+    setReveal(true);
+  }
+
+  function choose(c) {
+    if (!question) return;
+    const ok = c.kana === question.kana;
+    setTotal((t) => t + 1);
+    setScore((s) => s + (ok ? 1 : 0));
+    setStreak((st) => (ok ? st + 1 : 0));
+    setHistory((h) => [
+      { q: question.romaji[0], a: c.kana, correct: question.kana, ok },
+      ...h.slice(0, 19),
+    ]);
+    setReveal(true);
+  }
+
+  function flipRevealOrNext() {
+    if (!reveal) setReveal(true); else nextQuestion();
+  }
+
+  function resetStats() {
+    setScore(0); setTotal(0); setStreak(0); setHistory([]);
+  }
+
+  const accuracy = total ? Math.round((score / total) * 100) : 0;
+
+  return (
+    <div className="min-h-screen w-full bg-gray-50 text-gray-900 flex items-center justify-center p-4">
+      <div className="w-full max-w-4xl">
+        <header className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 mb-4">
+          <h1 className="text-2xl sm:text-3xl font-bold">ひらがな Hiragana Trainer</h1>
+          <div className="flex items-center gap-2">
+            <Metric label="คะแนน" value={`${score}/${total}`} sub={`${accuracy}%`} />
+            <Metric label="สตรีค" value={streak} />
+            <button onClick={resetStats} className="px-3 py-2 rounded-xl bg-gray-200 hover:bg-gray-300 text-sm">รีเซ็ต</button>
+          </div>
+        </header>
+
+        <div className="grid md:grid-cols-[1fr,280px] gap-4">
+          {/* Game Area */}
+          <section className="bg-white rounded-2xl shadow p-4 sm:p-6">
+            <Controls mode={mode} setMode={setMode} />
+
+            {/* Question Card */}
+            <div className="mt-4 flex flex-col items-center">
+              {mode === 'multiple' && (
+                <>
+                  <div className="text-sm text-gray-500">เลือกฮิรางานะให้ตรงกับโรมาจิ</div>
+                  <div className="mt-3 text-6xl sm:text-7xl font-bold tracking-wide">{question?.romaji[0] || ''}</div>
+                  <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-3 w-full">
+                    {choices.map((c) => (
+                      <button
+                        key={c.kana}
+                        onClick={() => choose(c)}
+                        className={'text-4xl bg-gray-100 rounded-2xl py-4 transition border ' +
+                          (reveal
+                            ? c.kana === question.kana
+                              ? 'border-green-500 bg-green-50'
+                              : c.kana === history[0]?.a && !history[0]?.ok
+                              ? 'border-red-500 bg-red-50'
+                              : 'border-transparent'
+                            : 'hover:bg-gray-200 border-transparent')}
+                        disabled={reveal}
+                      >
+                        {c.kana}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="mt-3">
+                    <button onClick={flipRevealOrNext} className="px-4 py-2 rounded-xl bg-black text-white">{reveal ? 'ข้อต่อไป →' : 'เฉลย'}</button>
+                  </div>
+                </>
+              )}
+
+              {mode === 'typing' && (
+                <>
+                  <div className="text-sm text-gray-500">พิมพ์โรมาจิให้ตรงกับฮิรางานะ</div>
+                  <div className="mt-3 text-7xl font-bold">{question?.kana || ''}</div>
+                  <form
+                    className="mt-4 flex w-full max-w-sm gap-2"
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      if (!reveal) submitTyping(); else nextQuestion();
+                    }}
+                  >
+                    <input
+                      autoFocus
+                      className="flex-1 rounded-xl border border-gray-300 px-4 py-3 text-lg outline-none focus:ring-2 focus:ring-black"
+                      placeholder="พิมพ์เช่น shi, chi, tsu (ん: n/nn/n')"
+                      value={answer}
+                      onChange={(e) => setAnswer(e.target.value)}
+                      disabled={reveal}
+                    />
+                    <button type="submit" className="rounded-xl px-4 py-3 bg-black text-white">
+                      {reveal ? 'ข้อต่อไป' : 'ตรวจ'}
+                    </button>
+                  </form>
+                  {reveal && (
+                    <div className="mt-3 text-center">
+                      <div className="text-sm">คำตอบที่ถูกต้อง:</div>
+                      <div className="text-2xl font-semibold">{question.romaji.join(' / ')}</div>
+                    </div>
+                  )}
+                </>
+              )}
+
+              {mode === 'cards' && (
+                <>
+                  <div className="text-sm text-gray-500">Flashcard: แตะเพื่อพลิก</div>
+                  <button
+                    onClick={() => setReveal((v) => !v)}
+                    className="mt-3 w-64 h-40 sm:w-80 sm:h-48 rounded-2xl bg-gray-100 flex items-center justify-center text-6xl"
+                  >
+                    {reveal ? (question?.romaji[0] || '') : (question?.kana || '')}
+                  </button>
+                  <div className="mt-3 flex gap-2">
+                    <button onClick={() => { setReveal(false); nextQuestion(); }} className="px-4 py-2 rounded-xl bg-gray-200">สุ่มใหม่</button>
+                    <button onClick={() => { setReveal(false); nextQuestion(); }} className="px-4 py-2 rounded-xl bg-black text-white">ถัดไป →</button>
+                  </div>
+                </>
+              )}
+            </div>
+          </section>
+
+          {/* Sidebar */}
+          <aside className="bg-white rounded-2xl shadow p-4 sm:p-6">
+            <div className="font-semibold mb-2">ช่วงตัวอักษร (เลือกได้หลายอัน)</div>
+            <div className="grid grid-cols-2 gap-2 text-sm">
+              {ROWS.map((r) => (
+                <label key={r.key} className="flex items-center gap-2 bg-gray-50 rounded-lg px-2 py-2">
+                  <input
+                    type="checkbox"
+                    checked={enabledRows.has(r.key)}
+                    onChange={() => toggleRow(r.key)}
+                  />
+                  <span>{r.label}</span>
+                </label>
+              ))}
+            </div>
+            <div className="mt-4 flex gap-2">
+              <button
+                className="px-3 py-2 rounded-xl bg-gray-200 hover:bg-gray-300 text-sm"
+                onClick={() => setEnabledRows(new Set(ROWS.map((r) => r.key)))}
+              >เลือกทั้งหมด</button>
+              <button
+                className="px-3 py-2 rounded-xl bg-gray-200 hover:bg-gray-300 text-sm"
+                onClick={() => setEnabledRows(new Set(['a','ka','sa']))}
+              >เริ่มง่าย (あ~さ)</button>
+            </div>
+
+            <div className="mt-6">
+              <div className="font-semibold mb-2">ประวัติล่าสุด</div>
+              <ul className="space-y-1 max-h-60 overflow-auto pr-1 text-sm">
+                {history.map((h, i) => (
+                  <li key={i} className={`flex justify-between rounded-lg px-2 py-1 ${h.ok ? 'bg-green-50' : 'bg-red-50'}`}>
+                    <span className="font-medium">{h.q}</span>
+                    <span className="opacity-70">→ {h.a}</span>
+                    <span className="font-medium">✓ {h.correct}</span>
+                  </li>
+                ))}
+                {history.length === 0 && <li className="text-gray-400">ยังไม่มีประวัติ</li>}
+              </ul>
+            </div>
+
+            {/* ---- Built-in Self Tests ---- */}
+            <TestPanel KANA={KANA} />
+          </aside>
+        </div>
+
+        <footer className="mt-4 text-xs text-gray-500 text-center">
+          เคล็ดลับ: し = shi/si, ち = chi/ti, つ = tsu/tu, ふ = fu/hu, を = wo/o, ん = n/nn/n'
+        </footer>
+      </div>
+    </div>
+  );
+}
+
+function Controls({ mode, setMode }) {
+  const tabs = [
+    { key: 'multiple', label: 'ตัวเลือก' },
+    { key: 'typing', label: 'พิมพ์คำตอบ' },
+    { key: 'cards', label: 'Flashcards' },
+  ];
+  return (
+    <div className="flex items-center gap-2">
+      {tabs.map((t) => (
+        <button
+          key={t.key}
+          onClick={() => setMode(t.key)}
+          className={`px-3 py-2 rounded-2xl text-sm border ${
+            mode === t.key ? 'bg-black text-white border-black' : 'bg-white border-gray-300'
+          }`}
+        >
+          {t.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function Metric({ label, value, sub }) {
+  return (
+    <div className="px-3 py-2 rounded-xl bg-white shadow text-right">
+      <div className="text-xs text-gray-500">{label}</div>
+      <div className="text-lg font-semibold leading-tight">{value}</div>
+      {sub && <div className="text-[10px] text-gray-400">{sub}</div>}
+    </div>
+  );
+}
+
+function TestPanel({ KANA }) {
+  const [results, setResults] = React.useState(null);
+
+  const cases = React.useMemo(() => {
+    const find = (kana) => KANA.find((k) => k.kana === kana);
+    return [
+      // normalize tests
+      { name: 'normalize: trim+lower', fn: 'normalize', input: '  Shi  ', expect: 'shi' },
+      { name: 'normalize: spaces', fn: 'normalize', input: ' t su ', expect: 'tsu' },
+      { name: "normalize: n'", fn: 'normalize', input: " N' ", expect: "n'" },
+      // correctness true
+      { name: 'し -> shi', fn: 'check', kana: 'し', input: 'shi', expect: true },
+      { name: 'し -> si', fn: 'check', kana: 'し', input: 'si', expect: true },
+      { name: 'ち -> chi', fn: 'check', kana: 'ち', input: 'chi', expect: true },
+      { name: 'ち -> ti', fn: 'check', kana: 'ち', input: 'ti', expect: true },
+      { name: 'つ -> tsu', fn: 'check', kana: 'つ', input: 'tsu', expect: true },
+      { name: 'つ -> tu', fn: 'check', kana: 'つ', input: 'tu', expect: true },
+      { name: 'を -> wo', fn: 'check', kana: 'を', input: 'wo', expect: true },
+      { name: 'を -> o', fn: 'check', kana: 'を', input: 'o', expect: true },
+      { name: 'よ -> Yo (case-insensitive)', fn: 'check', kana: 'よ', input: 'Yo', expect: true },
+      { name: "ん -> n", fn: 'check', kana: 'ん', input: 'n', expect: true },
+      { name: "ん -> nn", fn: 'check', kana: 'ん', input: 'nn', expect: true },
+      { name: "ん -> n'", fn: 'check', kana: 'ん', input: "n'", expect: true },
+      // correctness false
+      { name: 'さ ≠ ka', fn: 'check', kana: 'さ', input: 'ka', expect: false },
+      { name: 'blank ≠ か', fn: 'check', kana: 'か', input: '', expect: false },
+      { name: "'na' ≠ ん", fn: 'check', kana: 'ん', input: 'na', expect: false },
+    ].map((t) => ({ ...t, find }));
+  }, [KANA]);
+
+  function run() {
+    const out = cases.map((t) => {
+      let ok = false;
+      if (t.fn === 'normalize') ok = normalizeRomaji(t.input) === t.expect;
+      if (t.fn === 'check') ok = isRomajiCorrect(t.input, t.find(t.kana)) === t.expect;
+      return { ...t, ok };
+    });
+    setResults(out);
+  }
+
+  const passed = results ? results.filter((r) => r.ok).length : 0;
+
+  return (
+    <details className="mt-6">
+      <summary className="cursor-pointer font-semibold">Self-tests {results ? `(${passed}/${results.length} passed)` : '(not run)'}</summary>
+      <div className="mt-2 flex items-center gap-2">
+        <button onClick={run} className="px-3 py-2 rounded-xl bg-gray-200 hover:bg-gray-300 text-sm">Run tests</button>
+        {results && (
+          <span className="text-sm text-gray-600">{passed === results.length ? 'All good ✅' : 'Some tests failed ❌'}</span>
+        )}
+      </div>
+      {results && (
+        <ul className="mt-2 space-y-1 text-sm">
+          {results.map((r, i) => (
+            <li key={i} className={`rounded px-2 py-1 ${r.ok ? 'bg-green-50' : 'bg-red-50'}`}>
+              {r.ok ? '✅' : '❌'} {r.name}
+            </li>
+          ))}
+        </ul>
+      )}
+    </details>
+  );
+}
