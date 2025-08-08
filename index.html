@@ -1,110 +1,137 @@
 <!doctype html>
-<html lang="en">
+<html lang="th">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Hiragana Trainer (Single File)</title>
+  <title>ひらがな Hiragana Trainer</title>
+  <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    :root { --bg:#f7f7f8; --card:#fff; --fg:#111; --muted:#666; --border:#e5e7eb; --green:#16a34a22; --red:#dc262622; }
-    * { box-sizing: border-box; }
-    body { margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, "Noto Sans", "Helvetica Neue", Arial, "Apple Color Emoji", "Segoe UI Emoji"; background:var(--bg); color:var(--fg); }
-    .container { max-width: 1100px; margin: 0 auto; padding: 16px; min-height: 100vh; display:flex; align-items: center; justify-content: center; }
-    .app { width: 100%; max-width: 1000px; }
-    header { display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end; justify-content: space-between; margin-bottom: 16px; }
-    h1 { font-size: 28px; margin:0; font-weight: 800; }
-    .metrics { display:flex; gap:8px; align-items:center; }
-    .metric { background:var(--card); padding:10px 12px; border-radius:12px; box-shadow: 0 1px 2px rgba(0,0,0,.05); text-align:right; }
-    .metric .label { font-size:12px; color:var(--muted); }
-    .metric .value { font-weight:700; }
-    .btn { border:1px solid var(--border); padding:8px 12px; border-radius:12px; background:#eee; cursor:pointer; font-size: 14px; }
-    .btn.primary { background:#111; color:#fff; border-color:#111; }
-    .grid { display:grid; grid-template-columns: 1fr 280px; gap:16px; }
-    @media (max-width: 900px){ .grid { grid-template-columns: 1fr; } }
-    .card { background:var(--card); border-radius:16px; padding:16px; box-shadow: 0 1px 2px rgba(0,0,0,.06); }
-    .tabs { display:flex; gap:8px; }
-    .tab { border:1px solid var(--border); padding:8px 12px; border-radius:16px; background:#fff; cursor:pointer; font-size:14px; }
-    .tab.active { background:#111; color:#fff; border-color:#111; }
-    .center { display:flex; flex-direction:column; align-items:center; }
-    .prompt { color:var(--muted); font-size: 14px; }
-    .q-big { margin-top:8px; font-size: clamp(42px, 12vw, 72px); font-weight:800; letter-spacing: .02em; }
-    .choices { margin-top:16px; display:grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap:10px; width:100%; }
-    @media (max-width:640px){ .choices { grid-template-columns: repeat(2, minmax(0,1fr)); } }
-    .choice { font-size:38px; padding:16px 0; background:#f3f4f6; border-radius:16px; border:1px solid transparent; cursor:pointer; }
-    .choice.correct { background:#ecfdf5; border-color:#16a34a; }
-    .choice.wrong { background:#fef2f2; border-color:#dc2626; }
-    .row-grid { display:grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap:8px; }
-    .row-item { background:#f9fafb; border-radius:8px; padding:6px 8px; display:flex; gap:8px; align-items:center; font-size: 14px; }
-    .history { margin-top:12px; max-height: 260px; overflow:auto; padding-right:6px; }
-    .history li { display:flex; justify-content:space-between; gap:8px; padding:6px 8px; border-radius:8px; font-size:14px; }
-    .history li.ok { background: var(--green); }
-    .history li.ng { background: var(--red); }
-    .muted { color:var(--muted); }
-    .stack { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
-    details summary { cursor:pointer; }
-    footer { text-align:center; color:#666; font-size:12px; margin-top:12px; }
-    input[type="text"] { padding:12px 14px; border:1px solid var(--border); border-radius:12px; font-size:16px; outline:none; width:100%; }
-    input[type="text"]:focus { box-shadow: 0 0 0 2px #1113; }
+    html,body {height:100%}
+    input[type="range"] { width: 140px; }
+    .btn{@apply px-3 py-2 rounded-xl text-sm border border-gray-300 bg-white hover:bg-gray-50 transition}
+    .btn-ghost{@apply px-3 py-2 rounded-xl text-sm bg-transparent hover:bg-white/30 border-transparent}
+    .btn-primary{@apply px-4 py-2 rounded-xl bg-black text-white hover:opacity-90 transition}
+    .chip{@apply inline-flex items-center gap-2 px-2.5 py-1.5 rounded-full text-xs bg-white/70 backdrop-blur border border-white/50}
+    .card{@apply bg-white/80 backdrop-blur rounded-2xl shadow p-4 sm:p-6 border border-white}
+    .metric{@apply px-3 py-2 rounded-xl bg-white/90 backdrop-blur shadow text-right border border-white}
+    .glass{@apply bg-white/50 backdrop-blur border border-white}
   </style>
 </head>
-<body>
-  <div class="container">
-    <div class="app">
-      <header>
-        <h1>ひらがな Hiragana Trainer</h1>
-        <div class="metrics">
-          <div class="metric"><div class="label">คะแนน</div><div class="value" id="m-score">0/0</div><div class="label" id="m-acc">0%</div></div>
-          <div class="metric"><div class="label">สตรีค</div><div class="value" id="m-streak">0</div></div>
-          <button class="btn" id="btn-reset">รีเซ็ต</button>
+<body class="min-h-screen text-gray-900 bg-gradient-to-br from-sky-50 via-indigo-50 to-rose-50">
+  <div class="mx-auto w-full max-w-5xl p-4 sm:p-6">
+    <header class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 mb-4">
+      <div class="flex items-center gap-3">
+        <div class="chip">
+          <span class="text-lg">🇯🇵</span><span class="font-semibold">Hiragana Trainer</span>
         </div>
-      </header>
-
-      <div class="grid">
-        <section class="card">
-          <div class="tabs">
-            <button class="tab active" data-mode="multiple">ตัวเลือก</button>
-            <button class="tab" data-mode="typing">พิมพ์คำตอบ</button>
-            <button class="tab" data-mode="cards">Flashcards</button>
-          </div>
-
-          <div class="center" id="game-area">
-            <!-- dynamic content inserted by JS -->
-          </div>
-        </section>
-
-        <aside class="card">
-          <div class="stack" style="justify-content:space-between">
-            <div class="label" style="font-weight:600">ช่วงตัวอักษร (เลือกได้หลายอัน)</div>
-            <div class="stack">
-              <button class="btn" id="btn-all">เลือกทั้งหมด</button>
-              <button class="btn" id="btn-easy">เริ่มง่าย (あ~さ)</button>
-            </div>
-          </div>
-          <div class="row-grid" id="row-grid"></div>
-
-          <div style="margin-top:16px">
-            <div class="label" style="font-weight:600; margin-bottom:6px">ประวัติล่าสุด</div>
-            <ul class="history" id="history"></ul>
-          </div>
-
-          <details style="margin-top:16px">
-            <summary class="label" style="font-weight:600">Self-tests <span id="tests-status" class="muted">(not run)</span></summary>
-            <div class="stack" style="margin-top:8px">
-              <button class="btn" id="btn-tests">Run tests</button>
-              <span class="muted" id="tests-msg"></span>
-            </div>
-            <ul class="history" id="tests-list" style="max-height:200px"></ul>
-          </details>
-        </aside>
+        <span class="hidden sm:inline text-xs text-gray-500">เรียนรู้+ฝึกจำตัวอักษรฮิรางานะ</span>
       </div>
+      <div class="flex items-center gap-2">
+        <div class="metric">
+          <div class="text-xs text-gray-500">คะแนน</div>
+          <div id="score" class="text-lg font-semibold leading-tight">0/0</div>
+          <div id="acc" class="text-[10px] text-gray-400">0%</div>
+        </div>
+        <div class="metric">
+          <div class="text-xs text-gray-500">สตรีค</div>
+          <div id="streak" class="text-lg font-semibold leading-tight">0</div>
+        </div>
+        <button id="resetBtn" class="btn">รีเซ็ต</button>
+      </div>
+    </header>
 
-      <footer>
-        เคล็ดลับ: し = shi/si, ち = chi/ti, つ = tsu/tu, ふ = fu/hu, を = wo/o, ん = n/nn/n'
-      </footer>
+    <div class="grid lg:grid-cols-[1fr,320px] gap-4">
+      <section class="card">
+        <div class="flex flex-wrap items-center gap-2">
+          <div class="inline-flex rounded-2xl border bg-white/70 backdrop-blur overflow-hidden">
+            <button data-tab="multiple" class="tab px-3 py-2 text-sm bg-black text-white">ตัวเลือก</button>
+            <button data-tab="typing"   class="tab px-3 py-2 text-sm">พิมพ์คำตอบ</button>
+            <button data-tab="cards"    class="tab px-3 py-2 text-sm">Flashcards</button>
+          </div>
+          <div class="flex items-center gap-2 ml-auto">
+            <label class="chip">
+              <input id="autoplay" type="checkbox" class="accent-black">
+              <span>เล่นเสียงอัตโนมัติ</span>
+            </label>
+            <button id="speakBtn" class="btn" title="ออกเสียง (กดอีกครั้งเพื่อหยุด)">🔊 ออกเสียง</button>
+          </div>
+        </div>
+
+        <div class="mt-3 grid sm:grid-cols-2 gap-2 glass rounded-xl p-3">
+          <div class="flex flex-wrap items-center gap-3">
+            <span class="text-xs text-gray-600">Voice</span>
+            <label class="chip">
+              <span class="opacity-70 text-xs">Speed</span>
+              <input id="rate" type="range" min="0.6" max="1.4" step="0.05" value="1" />
+              <span id="rateVal" class="text-xs w-8 text-right">1.00</span>
+            </label>
+            <label class="chip">
+              <span class="opacity-70 text-xs">Volume</span>
+              <input id="voiceVol" type="range" min="0" max="1" step="0.05" value="1" />
+              <span id="voiceVolVal" class="text-xs w-8 text-right">1.00</span>
+            </label>
+            <button id="voiceTest" class="btn-ghost" title="ทดสอบเสียงพูด">ลองพูด「あいうえお」</button>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-3">
+            <span class="text-xs text-gray-600">BGM</span>
+            <button id="bgmToggle" class="btn">🎵 BGM: Off</button>
+            <label class="chip">
+              <span class="opacity-70 text-xs">Volume</span>
+              <input id="bgmVol" type="range" min="0" max="1" step="0.05" value="0.15" />
+              <span id="bgmVolVal" class="text-xs w-8 text-right">0.15</span>
+            </label>
+            <label class="chip cursor-pointer" title="อัปโหลดไฟล์เพลงของคุณเอง (mp3/ogg)">
+              <input id="bgmFile" type="file" accept="audio/*" class="hidden" />
+              <span>อัปโหลด BGM</span>
+            </label>
+          </div>
+        </div>
+
+        <div id="qwrap" class="mt-4 flex flex-col items-center"></div>
+      </section>
+
+      <aside class="card">
+        <div class="font-semibold mb-2">ช่วงตัวอักษร (เลือกได้หลายอัน)</div>
+        <div id="rowList" class="grid grid-cols-2 gap-2 text-sm"></div>
+
+        <div class="mt-4 flex gap-2">
+          <button id="selectAll" class="btn">เลือกทั้งหมด</button>
+          <button id="selectEasy" class="btn">เริ่มง่าย (あ~さ)</button>
+        </div>
+
+        <div class="mt-6">
+          <div class="font-semibold mb-2">ประวัติล่าสุด</div>
+          <ul id="history" class="space-y-1 max-h-64 overflow-auto pr-1 text-sm"></ul>
+        </div>
+
+        <details class="mt-6">
+          <summary class="cursor-pointer font-semibold">Self-tests <span id="tstatus" class="text-xs opacity-70">(not run)</span></summary>
+          <div class="mt-2 flex items-center gap-2">
+            <button id="runTests" class="btn">Run tests</button>
+            <span id="tlabel" class="text-sm text-gray-600"></span>
+          </div>
+          <ul id="tresults" class="mt-2 space-y-1 text-sm"></ul>
+        </details>
+
+        <div class="mt-4 text-xs text-gray-500">
+          เคล็ดลับ: し = shi/si, ち = chi/ti, つ = tsu/tu, ふ = fu/hu, を = wo/o, ん = n/nn/n'
+        </div>
+      </aside>
     </div>
+
+    <footer class="mt-4 text-xs text-gray-500 text-center">
+      ถ้าไม่ได้ยินเสียง: คลิกหน้าเพจก่อน 1 ครั้ง (เบราว์เซอร์บางตัวบล็อกอัตโนมัติ), แล้วกด 🔊 หรือเปิด BGM
+    </footer>
   </div>
 
+  <!-- Default BGM set to your Pixabay track (will still require user click to start) -->
+  <audio id="bgm" loop preload="auto" class="hidden"
+    src="https://cdn.pixabay.com/download/audio/2023/03/28/audio_43dd1537e4.mp3?filename=japanese-style-piano%E7%8E%89%E9%9F%BF-257200.mp3">
+  </audio>
+
   <script>
-    // --- Data ---
+    // ---------------- Data ----------------
     const KANA = [
       { kana: 'あ', romaji: ['a'], row: 'a' },
       { kana: 'い', romaji: ['i'], row: 'a' },
@@ -151,209 +178,265 @@
       { kana: 'ろ', romaji: ['ro'], row: 'ra' },
       { kana: 'わ', romaji: ['wa'], row: 'wa' },
       { kana: 'を', romaji: ['wo','o'], row: 'wa' },
-      { kana: 'ん', romaji: ['n','nn','n\''], row: 'n' },
+      { kana: 'ん', romaji: ['n','nn',"n'"], row: 'n' },
     ];
-
     const ROWS = [
-      { key: 'a', label: 'あ(あ-อ)' },
-      { key: 'ka', label: 'か(か-こ)' },
-      { key: 'sa', label: 'さ(さ-そ)' },
-      { key: 'ta', label: 'た(た-と)' },
-      { key: 'na', label: 'な(な-の)' },
-      { key: 'ha', label: 'は(は-ほ)' },
-      { key: 'ma', label: 'ま(ま-も)' },
-      { key: 'ya', label: 'や(や-よ)' },
-      { key: 'ra', label: 'ら(ら-ろ)' },
-      { key: 'wa', label: 'わ/を' },
-      { key: 'n', label: 'ん' },
+      { key:'a', label:'あ(あ-お)' },
+      { key:'ka', label:'か(か-こ)' },
+      { key:'sa', label:'さ(さ-そ)' },
+      { key:'ta', label:'た(た-と)' },
+      { key:'na', label:'な(น-の)' },
+      { key:'ha', label:'は(は-ほ)' },
+      { key:'ma', label:'ま(ま-も)' },
+      { key:'ya', label:'や(ย-よ)' },
+      { key:'ra', label:'ら(ら-ろ)' },
+      { key:'wa', label:'わ/を' },
+      { key:'n', label:'ん' },
     ];
 
-    // --- Helpers ---
-    const qs = (s, el=document) => el.querySelector(s);
-    const qsa = (s, el=document) => [...el.querySelectorAll(s)];
-    const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
-    const shuffle = (arr) => [...arr].sort(() => Math.random() - 0.5);
+    const $ = (s, el=document)=>el.querySelector(s);
+    const $$ = (s, el=document)=>Array.from(el.querySelectorAll(s));
+    const pick = (a)=>a[Math.floor(Math.random()*a.length)];
+    const shuffle = (a)=>[...a].sort(()=>Math.random()-0.5);
+    const norm = (s)=>(s??'').trim().toLowerCase().replace(/\s+/g,'');
+    const isCorrect=(input,item)=>item.romaji.some(r=>norm(r)===norm(input));
 
-    function normalizeRomaji(s){ return (s ?? '').trim().toLowerCase().replace(/\s+/g,''); }
-    function isRomajiCorrect(input, item){ const n=normalizeRomaji(input); return item.romaji.some(r=>normalizeRomaji(r)===n); }
+    // Speech
+    let voiceJA=null;
+    let rate=parseFloat(localStorage.getItem('rate')??'1')||1;
+    let voiceVol=parseFloat(localStorage.getItem('voiceVol')??'1')||1;
+    function chooseJapaneseVoice(){
+      const v=window.speechSynthesis?.getVoices?.()||[];
+      voiceJA = v.find(x=>x.lang?.toLowerCase()==='ja-jp')||v.find(x=>x.lang?.toLowerCase().startsWith('ja'))||null;
+    }
+    if('speechSynthesis'in window){chooseJapaneseVoice();window.speechSynthesis.onvoiceschanged=chooseJapaneseVoice;}
+    function speakJa(text){
+      if(!('speechSynthesis'in window)){alert('อุปกรณ์นี้ไม่รองรับเสียงพูด (Web Speech API)');return;}
+      try{window.speechSynthesis.cancel();}catch{}
+      const u=new SpeechSynthesisUtterance(text);
+      u.lang='ja-JP'; if(voiceJA) u.voice=voiceJA; u.rate=rate; u.pitch=1; u.volume=voiceVol;
+      window.speechSynthesis.speak(u);
+    }
 
-    // --- State ---
-    let mode = 'multiple';
-    let enabledRows = new Set(ROWS.map(r=>r.key));
-    let pool = KANA.filter(k=>enabledRows.has(k.row));
-    let question = null;
-    let choices = [];
-    let reveal = false;
-    let score = 0, total = 0, streak = 0;
-    const history = [];
+    // BGM
+    const bgm=$('#bgm');
+    let bgmOn=localStorage.getItem('bgmOn')==='true';
+    let bgmVol=parseFloat(localStorage.getItem('bgmVol')??'0.15')||0.15;
+    bgm.volume=bgmVol;
+    async function setBgmOn(on){
+      bgmOn=on; localStorage.setItem('bgmOn',String(on));
+      $('#bgmToggle').textContent=on?'🎵 BGM: On':'🎵 BGM: Off';
+      if(on){try{await bgm.play();}catch{}} else {try{bgm.pause();}catch{}}
+    }
 
-    // --- UI Wiring ---
-    qsa('.tab').forEach(btn=>{
-      btn.addEventListener('click', ()=>{
-        qsa('.tab').forEach(b=>b.classList.remove('active'));
-        btn.classList.add('active');
-        mode = btn.dataset.mode;
-        nextQuestion();
+    // State
+    let mode='multiple';
+    let enabledRows=new Set(JSON.parse(localStorage.getItem('enabledRows')||'[]'));
+    if(enabledRows.size===0) enabledRows=new Set(ROWS.map(r=>r.key));
+    let pool=KANA.filter(k=>enabledRows.has(k.row));
+    let question=null; let choices=[]; let reveal=false;
+    let score=parseInt(localStorage.getItem('score')||'0',10);
+    let total=parseInt(localStorage.getItem('total')||'0',10);
+    let streak=parseInt(localStorage.getItem('streak')||'0',10);
+    let history=JSON.parse(localStorage.getItem('history')||'[]');
+
+    // UI
+    $$('.tab').forEach(b=>{
+      b.addEventListener('click',()=>{
+        $$('.tab').forEach(x=>x.classList.remove('bg-black','text-white'));
+        b.classList.add('bg-black','text-white');
+        mode=b.dataset.tab; render(); newQuestion();
       });
     });
 
-    qs('#btn-reset').addEventListener('click', ()=>{ score=0; total=0; streak=0; history.length=0; updateMetrics(); renderHistory(); nextQuestion(); });
-    qs('#btn-all').addEventListener('click', ()=>{ enabledRows=new Set(ROWS.map(r=>r.key)); updateRowsUI(); refreshPool(); });
-    qs('#btn-easy').addEventListener('click', ()=>{ enabledRows=new Set(['a','ka','sa']); updateRowsUI(); refreshPool(); });
+    $('#resetBtn').addEventListener('click',()=>{score=0;total=0;streak=0;history=[];persist();updateMetrics();renderHistory();});
+    $('#selectAll').addEventListener('click',()=>{enabledRows=new Set(ROWS.map(r=>r.key));persistRows();rebuildRowsUI();rebuildPool();newQuestion();});
+    $('#selectEasy').addEventListener('click',()=>{enabledRows=new Set(['a','ka','sa']);persistRows();rebuildRowsUI();rebuildPool();newQuestion();});
 
-    function updateRowsUI(){
-      const grid = qs('#row-grid');
-      grid.innerHTML = '';
+    // Voice sliders
+    $('#rate').value=rate.toFixed(2); $('#rateVal').textContent=rate.toFixed(2);
+    $('#rate').addEventListener('input',e=>{rate=parseFloat(e.target.value);$('#rateVal').textContent=rate.toFixed(2);localStorage.setItem('rate',String(rate));});
+    $('#voiceVol').value=voiceVol.toFixed(2); $('#voiceVolVal').textContent=voiceVol.toFixed(2);
+    $('#voiceVol').addEventListener('input',e=>{voiceVol=parseFloat(e.target.value);$('#voiceVolVal').textContent=voiceVol.toFixed(2);localStorage.setItem('voiceVol',String(voiceVol));});
+    $('#voiceTest').addEventListener('click',()=>speakJa('あ い う え お'));
+
+    // BGM controls
+    $('#bgmVol').value=bgmVol.toFixed(2); $('#bgmVolVal').textContent=bgmVol.toFixed(2);
+    $('#bgmVol').addEventListener('input',e=>{bgmVol=parseFloat(e.target.value);$('#bgmVolVal').textContent=bgmVol.toFixed(2);bgm.volume=bgmVol;localStorage.setItem('bgmVol',String(bgmVol));});
+    $('#bgmToggle').addEventListener('click',()=>setBgmOn(!bgmOn));
+    $('#bgmFile').addEventListener('change',e=>{const f=e.target.files?.[0];if(!f)return;const url=URL.createObjectURL(f);bgm.src=url;setBgmOn(true);});
+
+    function rebuildRowsUI(){
+      const box=$('#rowList'); box.innerHTML='';
       ROWS.forEach(r=>{
-        const id = 'row-'+r.key;
-        const item = document.createElement('label');
-        item.className='row-item';
-        item.innerHTML = `<input type="checkbox" id="${id}" ${enabledRows.has(r.key)?'checked':''}/> <span>${r.label}</span>`;
-        const input = item.querySelector('input');
-        input.addEventListener('change', ()=>{
-          if (input.checked) enabledRows.add(r.key); else enabledRows.delete(r.key);
-          if (enabledRows.size===0){ input.checked=true; enabledRows.add(r.key); }
-          refreshPool();
+        const id='row-'+r.key;
+        const label=document.createElement('label');
+        label.className='flex items-center gap-2 bg-white/70 backdrop-blur rounded-lg px-2 py-2 border border-white';
+        label.innerHTML=`<input class="accent-black" type="checkbox" id="${id}" ${enabledRows.has(r.key)?'checked':''}/> <span>${r.label}</span>`;
+        box.appendChild(label);
+        $('#'+id).addEventListener('change',e=>{
+          if(e.target.checked) enabledRows.add(r.key); else enabledRows.delete(r.key);
+          if(enabledRows.size===0){enabledRows.add(r.key); e.target.checked=true;}
+          persistRows(); rebuildPool(); newQuestion();
         });
-        grid.appendChild(item);
       });
     }
-
-    function refreshPool(){ pool = KANA.filter(k=>enabledRows.has(k.row)); nextQuestion(); }
-
-    function buildQuestion(base){
-      if (mode==='multiple'){
-        const correct = base;
-        const wrongs = shuffle(pool.filter(k=>k.kana!==correct.kana)).slice(0,3);
-        choices = shuffle([correct, ...wrongs]);
-      }
-      question = base; reveal=false; render();
-    }
-
-    function nextQuestion(){ if (!pool.length) refreshPool(); buildQuestion(pick(pool)); }
-
-    function updateMetrics(){
-      qs('#m-score').textContent = `${score}/${total}`;
-      const acc = total? Math.round((score/total)*100) : 0;
-      qs('#m-acc').textContent = `${acc}%`;
-      qs('#m-streak').textContent = `${streak}`;
-    }
-
-    function pushHistory(entry){
-      history.unshift(entry); if (history.length>20) history.pop(); renderHistory();
-    }
-
-    function renderHistory(){
-      const ul = qs('#history');
-      if (!history.length){ ul.innerHTML = '<li class="muted">ยังไม่มีประวัติ</li>'; return; }
-      ul.innerHTML = history.map(h=>`<li class="${h.ok?'ok':'ng'}"><span><strong>${h.q}</strong></span><span class="muted">→ ${h.a}</span><span><strong>✓ ${h.correct}</strong></span></li>`).join('');
-    }
-
-    function handleChoose(c){
-      if (!question) return;
-      const ok = c.kana === question.kana;
-      total += 1; if (ok) score += 1; streak = ok ? (streak+1) : 0;
-      pushHistory({ q: question.romaji[0], a: c.kana, correct: question.kana, ok });
-      reveal = true; render();
-    }
-
-    function handleTypingSubmit(input){
-      const ok = isRomajiCorrect(input, question);
-      total += 1; if (ok) score += 1; streak = ok ? (streak+1) : 0;
-      pushHistory({ q: question.kana, a: input || '(ว่าง)', correct: question.romaji[0], ok });
-      reveal = true; render();
-    }
+    function rebuildPool(){ pool=KANA.filter(k=>enabledRows.has(k.row)); }
+    function persistRows(){ localStorage.setItem('enabledRows',JSON.stringify(Array.from(enabledRows))); }
+    function persist(){ localStorage.setItem('score',String(score)); localStorage.setItem('total',String(total)); localStorage.setItem('streak',String(streak)); localStorage.setItem('history',JSON.stringify(history)); }
 
     function render(){
-      updateMetrics();
-      const area = qs('#game-area');
-      if (!question){ area.innerHTML=''; return; }
-      if (mode==='multiple'){
-        area.innerHTML = `
-          <div class="prompt">เลือกฮิรางานะให้ตรงกับโรมาจิ</div>
-          <div class="q-big">${question.romaji[0]}</div>
-          <div class="choices">${choices.map(c=>`<button class="choice" data-kana="${c.kana}">${c.kana}</button>`).join('')}</div>
-          <div style="margin-top:10px"><button class="btn primary" id="btn-reveal-next">${reveal?'ข้อต่อไป →':'เฉลย'}</button></div>
-        `;
-        qsa('.choice', area).forEach(btn=>{
-          btn.addEventListener('click', ()=>{
-            const kana = btn.dataset.kana; const c = choices.find(x=>x.kana===kana); handleChoose(c);
-          });
-        });
-        const btnRN = qs('#btn-reveal-next', area);
-        btnRN.addEventListener('click', ()=>{ if (!reveal) { reveal=true; render(); } else { nextQuestion(); } });
-        if (reveal){
-          qsa('.choice', area).forEach(btn=>{
-            const kana = btn.dataset.kana;
-            if (kana===question.kana) btn.classList.add('correct');
-            const last = history[0];
-            if (last && !last.ok && kana===last.a) btn.classList.add('wrong');
-          });
-        }
-      } else if (mode==='typing'){
-        area.innerHTML = `
-          <div class="prompt">พิมพ์โรมาจิให้ตรงกับฮิรางานะ</div>
-          <div class="q-big">${question.kana}</div>
-          <form id="typing-form" class="stack" style="margin-top:10px; width:100%; max-width:420px">
-            <input id="typing-input" type="text" placeholder="พิมพ์เช่น shi, chi, tsu (ん: n/nn/n')" ${reveal?'disabled':''} />
-            <button class="btn primary" type="submit">${reveal?'ข้อต่อไป':'ตรวจ'}</button>
-          </form>
-          ${reveal?`<div class="muted" style="margin-top:6px">คำตอบที่ถูกต้อง: <strong>${question.romaji.join(' / ')}</strong></div>`:''}
-        `;
-        const form = qs('#typing-form', area);
-        const input = qs('#typing-input', area);
-        if (!reveal) input.focus();
-        form.addEventListener('submit', (e)=>{
-          e.preventDefault();
-          if (!reveal) handleTypingSubmit(input.value); else nextQuestion();
-        });
-      } else if (mode==='cards'){
-        area.innerHTML = `
-          <div class="prompt">Flashcard: แตะเพื่อพลิก</div>
-          <button id="card" class="choice" style="width:320px; height:200px">${reveal?question.romaji[0]:question.kana}</button>
-          <div class="stack" style="margin-top:10px">
-            <button class="btn" id="btn-shuffle">สุ่มใหม่</button>
-            <button class="btn primary" id="btn-next">ถัดไป →</button>
+      const q=$('#qwrap'); q.innerHTML='';
+      if(mode==='multiple'){
+        q.innerHTML=`
+          <div class="text-sm text-gray-500">เลือกฮิรางานะให้ตรงกับโรมาจิ</div>
+          <div class="mt-3 flex items-center gap-3">
+            <div id="prompt" class="text-6xl sm:text-7xl font-bold tracking-wide"></div>
+            <button id="qSpeak" class="btn" title="ออกเสียงโรมาจิ">🔊</button>
           </div>
-        `;
-        qs('#card', area).addEventListener('click', ()=>{ reveal=!reveal; render(); });
-        qs('#btn-shuffle', area).addEventListener('click', ()=>{ reveal=false; nextQuestion(); });
-        qs('#btn-next', area).addEventListener('click', ()=>{ reveal=false; nextQuestion(); });
+          <div id="opts" class="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-3 w-full"></div>
+          <div class="mt-3"><button id="revealBtn" class="btn-primary">เฉลย</button></div>`;
+        $('#qSpeak').addEventListener('click',()=>speakJa(question?.romaji?.[0]||'')); paintMultiple();
+        $('#revealBtn').addEventListener('click',()=>{ if(!reveal){reveal=true;paintChoices();} else {newQuestion();} });
+      } else if(mode==='typing'){
+        q.innerHTML=`
+          <div class="text-sm text-gray-500">พิมพ์โรมาจิให้ตรงกับฮิรางานะ</div>
+          <div class="mt-3 flex items-center gap-3">
+            <div id="prompt" class="text-7xl font-bold"></div>
+            <button id="qSpeak" class="btn" title="ออกเสียงฮิรางานะ">🔊</button>
+          </div>
+          <form id="form" class="mt-4 flex w-full max-w-sm gap-2">
+            <input id="ans" class="flex-1 rounded-xl border border-gray-300 px-4 py-3 text-lg outline-none focus:ring-2 focus:ring-black"
+                   placeholder="พิมพ์เช่น shi, chi, tsu (ん: n/nn/n')" autocomplete="off"/>
+            <button class="btn-primary">${reveal ? 'ข้อต่อไป' : 'ตรวจ'}</button>
+          </form>
+          <div id="solution" class="mt-3 text-center hidden">
+            <div class="text-sm">คำตอบที่ถูกต้อง:</div>
+            <div id="solText" class="text-2xl font-semibold"></div>
+          </div>`;
+        $('#qSpeak').addEventListener('click',()=>speakJa(question?.kana||'')); $('#form').addEventListener('submit',e=>{e.preventDefault(); if(!reveal) submitTyping(); else newQuestion();});
+        $('#ans').focus(); $('#prompt').textContent=question?.kana||'';
+      } else {
+        q.innerHTML=`
+          <div class="text-sm text-gray-500">Flashcard: แตะเพื่อพลิก</div>
+          <button id="card" class="mt-3 w-64 h-40 sm:w-80 sm:h-48 rounded-2xl bg-white/70 backdrop-blur border border-white flex items-center justify-center text-6xl"></button>
+          <div class="mt-3 flex flex-wrap gap-2">
+            <button id="shuffleBtn" class="btn">สุ่มใหม่</button>
+            <button id="nextBtn" class="btn-primary">ถัดไป →</button>
+            <button id="qSpeak" class="btn" title="ออกเสียงด้านที่โชว์อยู่">🔊</button>
+          </div>`;
+        const card=$('#card'); const paint=()=>card.textContent=reveal?(question?.romaji?.[0]||''):(question?.kana||'');
+        card.addEventListener('click',()=>{reveal=!reveal; paint();});
+        $('#shuffleBtn').addEventListener('click',()=>{reveal=false; newQuestion();});
+        $('#nextBtn').addEventListener('click',()=>{reveal=false; newQuestion();});
+        $('#qSpeak').addEventListener('click',()=>speakJa(reveal?(question?.romaji?.[0]||''):(question?.kana||'')));
+        paint();
       }
+      $('#speakBtn').onclick=()=>{ if(mode==='multiple') speakJa(question?.romaji?.[0]||''); else speakJa(question?.kana||''); };
     }
 
-    // --- Tests ---
-    const tests = [
-      { name: 'normalize: trim+lower', run: ()=> normalizeRomaji('  Shi  ')==='shi' },
-      { name: 'normalize: spaces', run: ()=> normalizeRomaji(' t su ')==='tsu' },
-      { name: "normalize: n'", run: ()=> normalizeRomaji(" N' ")==="n'" },
-      { name: 'し -> shi', run: ()=> isRomajiCorrect('shi', KANA.find(k=>k.kana==='し'))===true },
-      { name: 'し -> si', run: ()=> isRomajiCorrect('si', KANA.find(k=>k.kana==='し'))===true },
-      { name: 'ち -> chi', run: ()=> isRomajiCorrect('chi', KANA.find(k=>k.kana==='ち'))===true },
-      { name: 'ち -> ti', run: ()=> isRomajiCorrect('ti', KANA.find(k=>k.kana==='ち'))===true },
-      { name: 'つ -> tsu', run: ()=> isRomajiCorrect('tsu', KANA.find(k=>k.kana==='つ'))===true },
-      { name: 'つ -> tu', run: ()=> isRomajiCorrect('tu', KANA.find(k=>k.kana==='つ'))===true },
-      { name: 'を -> wo', run: ()=> isRomajiCorrect('wo', KANA.find(k=>k.kana==='を'))===true },
-      { name: 'を -> o', run: ()=> isRomajiCorrect('o', KANA.find(k=>k.kana==='を'))===true },
-      { name: 'よ -> Yo (case-insensitive)', run: ()=> isRomajiCorrect('Yo', KANA.find(k=>k.kana==='よ'))===true },
-      { name: 'blank ≠ か', run: ()=> isRomajiCorrect('', KANA.find(k=>k.kana==='か'))===false },
-      { name: 'ん -> n', run: ()=> isRomajiCorrect('n', KANA.find(k=>k.kana==='ん'))===true },
-      { name: "ん -> nn", run: ()=> isRomajiCorrect('nn', KANA.find(k=>k.kana==='ん'))===true },
-      { name: "ん -> n'", run: ()=> isRomajiCorrect("n'", KANA.find(k=>k.kana==='ん'))===true },
-      { name: "'na' ≠ ん", run: ()=> isRomajiCorrect('na', KANA.find(k=>k.kana==='ん'))===false },
-    ];
+    function paintMultiple(){
+      $('#prompt').textContent=question?.romaji?.[0]||'';
+      const opts=$('#opts'); opts.innerHTML='';
+      choices.forEach(c=>{
+        const b=document.createElement('button');
+        b.className='text-4xl bg-white/80 backdrop-blur rounded-2xl py-4 transition border border-white hover:bg-white disabled:opacity-75';
+        b.textContent=c.kana; b.onclick=()=>choose(c); opts.appendChild(b);
+      });
+      paintChoices();
+    }
+    function paintChoices(){
+      const btns=$$('#opts > button');
+      btns.forEach((b,i)=>{
+        const c=choices[i]; b.disabled=reveal;
+        b.classList.remove('bg-green-50','border-green-500','bg-red-50','border-red-500');
+        if(reveal){
+          if(c.kana===question.kana) b.classList.add('bg-green-50','border-green-500');
+          else if(history[0]?.a===c.kana && !history[0]?.ok) b.classList.add('bg-red-50','border-red-500');
+        }
+      });
+      $('#revealBtn').textContent=reveal?'ข้อต่อไป →':'เฉลย';
+    }
 
-    qs('#btn-tests').addEventListener('click', ()=>{
-      const results = tests.map(t=>({ name:t.name, ok:t.run() }));
-      const passed = results.filter(r=>r.ok).length;
-      qs('#tests-status').textContent = `(${passed}/${results.length} passed)`;
-      qs('#tests-msg').textContent = passed===results.length ? 'All good ✅' : 'Some tests failed ❌';
-      qs('#tests-list').innerHTML = results.map(r=>`<li class="${r.ok?'ok':'ng'}">${r.ok?'✅':'❌'} ${r.name}</li>`).join('');
-    });
+    // Logic
+    function newQuestion(){
+      question=pick(pool); reveal=false;
+      if(mode==='multiple'){
+        const wrongs=shuffle(pool.filter(k=>k.kana!==question.kana)).slice(0,3);
+        choices=shuffle([question,...wrongs]);
+      }
+      render();
+      if($('#autoplay').checked){ if(mode==='multiple') speakJa(question?.romaji?.[0]||''); else speakJa(question?.kana||''); }
+    }
+    function submitTyping(){
+      const input=$('#ans').value||''; const ok=isCorrect(input,question);
+      total++; if(ok) score++; streak=ok?(streak+1):0;
+      history.unshift({ q:question.kana, a:input||'(ว่าง)', correct:question.romaji[0], ok });
+      history=history.slice(0,20);
+      persist(); updateMetrics(); renderHistory();
+      reveal=true; $('#solText').textContent=question.romaji.join(' / '); $('#solution').classList.remove('hidden'); $('#form button').textContent='ข้อต่อไป';
+    }
+    function choose(c){
+      const ok=c.kana===question.kana;
+      total++; if(ok) score++; streak=ok?(streak+1):0;
+      history.unshift({ q:question.romaji[0], a:c.kana, correct:question.kana, ok });
+      history=history.slice(0,20);
+      persist(); updateMetrics(); renderHistory();
+      reveal=true; paintChoices();
+    }
 
-    // --- Init ---
-    updateRowsUI();
-    refreshPool();
+    function updateMetrics(){ const acc= total? Math.round((score/total)*100):0; $('#score').textContent=`${score}/${total}`; $('#acc').textContent=`${acc}%`; $('#streak').textContent=`${streak}`; }
+    function renderHistory(){
+      const ul=$('#history'); ul.innerHTML='';
+      if(!history.length){ ul.innerHTML='<li class="text-gray-400">ยังไม่มีประวัติ</li>'; return; }
+      history.forEach(h=>{
+        const li=document.createElement('li');
+        li.className=`flex justify-between rounded-lg px-2 py-1 ${h.ok?'bg-green-50':'bg-red-50'}`;
+        li.innerHTML=`<span class="font-medium">${h.q}</span><span class="opacity-70">→ ${h.a}</span><span class="font-medium">✓ ${h.correct}</span>`;
+        ul.appendChild(li);
+      });
+    }
+
+    // Tests
+    function runTests(){
+      const cases=[
+        {name:'normalize: trim+lower',fn:'n',input:'  Shi  ',expect:'shi'},
+        {name:'normalize: spaces',fn:'n',input:' t su ',expect:'tsu'},
+        {name:"normalize: n'",fn:'n',input:" N' ",expect:"n'"},
+        {name:'し -> shi',fn:'c',kana:'し',input:'shi',expect:true},
+        {name:'し -> si',fn:'c',kana:'し',input:'si',expect:true},
+        {name:'ち -> chi',fn:'c',kana:'ち',input:'chi',expect:true},
+        {name:'ち -> ti',fn:'c',kana:'ち',input:'ti',expect:true},
+        {name:'つ -> tsu',fn:'c',kana:'つ',input:'tsu',expect:true},
+        {name:'つ -> tu',fn:'c',kana:'つ',input:'tu',expect:true},
+        {name:'を -> wo',fn:'c',kana:'を',input:'wo',expect:true},
+        {name:'を -> o',fn:'c',kana:'を',input:'o',expect:true},
+        {name:'よ -> Yo',fn:'c',kana:'よ',input:'Yo',expect:true},
+        {name:"ん -> n",fn:'c',kana:'ん',input:'n',expect:true},
+        {name:"ん -> nn",fn:'c',kana:'ん',input:'nn',expect:true},
+        {name:"ん -> n'",fn:'c',kana:'ん',input:"n'",expect:true},
+        {name:'blank ≠ か',fn:'c',kana:'か',input:'',expect:false},
+        {name:"'na' ≠ ん",fn:'c',kana:'ん',input:'na',expect:false},
+      ];
+      const find=(k)=>KANA.find(x=>x.kana===k);
+      const results=cases.map(t=>({ ...t, ok: t.fn==='n'? norm(t.input)===t.expect : isCorrect(t.input,find(t.kana))===t.expect }));
+      const passed=results.filter(r=>r.ok).length;
+      $('#tstatus').textContent=`(${passed}/${results.length} passed)`;
+      $('#tlabel').textContent= passed===results.length ? 'All good ✅' : 'Some tests failed ❌';
+      const ul=$('#tresults'); ul.innerHTML='';
+      results.forEach(r=>{
+        const li=document.createElement('li');
+        li.className=`rounded px-2 py-1 ${r.ok?'bg-green-50':'bg-red-50'}`; li.textContent=`${r.ok?'✅':'❌'} ${r.name}`;
+        ul.appendChild(li);
+      });
+    }
+    $('#runTests').addEventListener('click',runTests);
+
+    // Init
+    $('#autoplay').checked=localStorage.getItem('autoplay')==='true';
+    $('#autoplay').addEventListener('change',e=>localStorage.setItem('autoplay',String(e.target.checked)));
+    rebuildRowsUI(); updateMetrics(); renderHistory(); render(); newQuestion();
+    $('#bgmToggle').textContent=bgmOn?'🎵 BGM: On':'🎵 BGM: Off'; if(bgmOn) setBgmOn(true);
   </script>
 </body>
 </html>
